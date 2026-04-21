@@ -12,6 +12,13 @@ const CreatePost: React.FC = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
+  const handleCancel = () => {
+    if (content.trim() && !window.confirm('You have unsaved changes. Are you sure you want to leave? Your draft will be lost.')) {
+      return;
+    }
+    navigate('/');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -69,9 +76,14 @@ const CreatePost: React.FC = () => {
           </div>
         </div>
         
-        <button type="submit" disabled={loading || !content.trim()}>
-          {loading ? 'Posting...' : 'Post'}
-        </button>
+        <div className="form-actions">
+          <button type="submit" disabled={loading || !content.trim()}>
+            {loading ? 'Posting...' : 'Post'}
+          </button>
+          <button type="button" className="cancel-button" onClick={handleCancel} disabled={loading}>
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

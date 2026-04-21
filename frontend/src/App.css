@@ -359,6 +359,17 @@ button:disabled {
 }
 
 /* Create Post */
+.cancel-button {
+  background-color: transparent;
+  color: #657786;
+  border: 1px solid var(--border-color);
+}
+
+.cancel-button:hover {
+  background-color: #f5f8fa;
+  color: var(--text-color);
+}
+
 .create-post {
   background-color: var(--background-color);
   border: 1px solid var(--border-color);
