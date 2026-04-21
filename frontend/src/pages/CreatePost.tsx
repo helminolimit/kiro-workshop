@@ -77,11 +77,11 @@ const CreatePost: React.FC = () => {
         </div>
         
         <div className="form-actions">
-          <button type="submit" disabled={loading || !content.trim()}>
-            {loading ? 'Posting...' : 'Post'}
-          </button>
           <button type="button" className="cancel-button" onClick={handleCancel} disabled={loading}>
             Cancel
+          </button>
+          <button type="submit" disabled={loading || !content.trim()}>
+            {loading ? 'Posting...' : 'Post'}
           </button>
         </div>
       </form>
