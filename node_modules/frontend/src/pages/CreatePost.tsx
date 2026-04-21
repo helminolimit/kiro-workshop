@@ -13,7 +13,7 @@ const CreatePost: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCancel = () => {
-    if (content.trim() && !window.confirm('You have unsaved changes. Are you sure you want to leave? Your draft will be lost.')) {
+    if (content.trim() && !window.confirm('Discard draft?')) {
       return;
     }
     navigate('/');
