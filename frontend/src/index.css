@@ -81,3 +81,116 @@ a {
     gap: 0.5rem;
   }
 }
+
+/* Comment thread */
+.comments-toggle-button {
+  background: none;
+  border: none;
+  color: #657786;
+  padding: 0;
+  font-size: 0.875rem;
+  font-weight: normal;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.comments-toggle-button:hover {
+  background: none;
+  color: #657786;
+}
+
+.comment-thread {
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+}
+
+.comment-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  position: relative;
+}
+
+.comment-item:hover .comment-delete-button {
+  visibility: visible;
+}
+
+.comment-author {
+  font-weight: 700;
+  color: var(--text-color);
+  margin-right: 0.25rem;
+}
+
+.comment-date {
+  color: #657786;
+  font-size: 0.8125rem;
+}
+
+.comment-content {
+  flex: 1;
+  font-size: 0.9375rem;
+  color: var(--text-color);
+}
+
+.comment-delete-button {
+  background: none;
+  border: none;
+  color: #657786;
+  padding: 0 0.25rem;
+  font-size: 0.75rem;
+  font-weight: normal;
+  cursor: pointer;
+  visibility: hidden;
+  flex-shrink: 0;
+}
+
+.comment-delete-button:hover {
+  background: none;
+  color: var(--error-color);
+}
+
+.comment-compose {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.comment-input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.comment-submit-button {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.comment-submit-button:hover {
+  background-color: #7c3aed;
+}
+
+.comment-submit-button:disabled {
+  background-color: #c4b5fd;
+  cursor: not-allowed;
+}
+
+.comment-error {
+  color: var(--error-color);
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}

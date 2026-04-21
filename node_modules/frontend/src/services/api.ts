@@ -1,5 +1,6 @@
 import { User } from '../types/user';
 import { Post } from '../types/post';
+import { Comment } from '../types/comment';
 
 // Use environment variable for API URL
 const API_URL = import.meta.env.VITE_API_URL;
@@ -189,6 +190,43 @@ export const postsApi = {
     console.log(`Making unlikePost request to: ${API_URL}/posts/${postId}/unlike`);
     const response = await fetch(`${API_URL}/posts/${postId}/unlike`, {
       method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+};
+
+// Comments API calls
+export const commentsApi = {
+  getComments: async (postId: string, token: string): Promise<{ comments: Comment[] }> => {
+    console.log(`Making getComments request to: ${API_URL}/posts/${postId}/comments`);
+    const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return handleResponse(response);
+  },
+
+  createComment: async (postId: string, content: string, token: string): Promise<{ comment: Comment }> => {
+    console.log(`Making createComment request to: ${API_URL}/posts/${postId}/comments`);
+    const response = await fetch(`${API_URL}/posts/${postId}/comments`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ content }),
+    });
+    return handleResponse(response);
+  },
+
+  deleteComment: async (postId: string, commentId: string, token: string): Promise<{ message: string }> => {
+    console.log(`Making deleteComment request to: ${API_URL}/posts/${postId}/comments/${commentId}`);
+    const response = await fetch(`${API_URL}/posts/${postId}/comments/${commentId}`, {
+      method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
       },

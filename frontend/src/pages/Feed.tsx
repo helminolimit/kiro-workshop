@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { Post } from '../types/post';
 import { postsApi, usersApi } from '../services/api';
+import CommentThread from '../components/CommentThread';
 
 const Feed: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -10,7 +11,9 @@ const Feed: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [nextToken, setNextToken] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'newest' | 'popular'>('newest');
-  const { token } = useAuth();
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+  const { token, user } = useAuth();
   const observer = useRef<IntersectionObserver | null>(null);
   const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
@@ -50,6 +53,7 @@ const Feed: React.FC = () => {
       );
       
       setPosts(prevPosts => nextToken ? [...prevPosts, ...postsWithUsers] : postsWithUsers);
+      setCommentCounts(prev => ({ ...prev, ...Object.fromEntries(postsWithUsers.map(p => [p.id, p.commentsCount])) }));
       setNextToken(data.nextToken);
     } catch (err) {
       setError('Failed to load posts. Please try again later.');
@@ -95,6 +99,10 @@ const Feed: React.FC = () => {
     setSortBy(e.target.value as 'newest' | 'popular');
   };
 
+  const toggleComments = (postId: string) => {
+    setExpandedComments(prev => new Set(prev.has(postId) ? [...prev].filter(x => x !== postId) : [...prev, postId]));
+  };
+
   return (
     <div className="feed-layout">
       <div className="feed-main">
@@ -122,55 +130,46 @@ const Feed: React.FC = () => {
               <p>No posts yet. Be the first to post!</p>
             ) : (
               posts.map((post, index) => {
-                if (posts.length === index + 1) {
-                  return (
-                    <div 
-                      ref={lastPostElementRef}
-                      key={post.id} 
-                      className="post-card"
-                    >
-                      <div className="post-header">
-                        <Link to={`/profile/${post.userId}`} className="user-link">
-                          {post.user ? post.user.displayName : 'Unknown User'}
-                        </Link>
-                        <span className="post-date">{formatDate(post.createdAt)}</span>
-                      </div>
-                      <div className="post-content">{post.content}</div>
-                      <div className="post-footer">
-                        <button 
-                          onClick={() => handleLike(post.id)} 
-                          className={`like-button ${post.liked ? 'liked' : ''}`}
-                          disabled={post.liked}
-                        >
-                          {post.likesCount} {post.likesCount === 1 ? 'Like' : 'Likes'}
-                        </button>
-                        <span>{post.commentsCount} {post.commentsCount === 1 ? 'Comment' : 'Comments'}</span>
-                      </div>
+                const isLast = posts.length === index + 1;
+                const displayCount = commentCounts[post.id] ?? post.commentsCount;
+                return (
+                  <div
+                    ref={isLast ? lastPostElementRef : undefined}
+                    key={post.id}
+                    className="post-card"
+                  >
+                    <div className="post-header">
+                      <Link to={`/profile/${post.userId}`} className="user-link">
+                        {post.user ? post.user.displayName : 'Unknown User'}
+                      </Link>
+                      <span className="post-date">{formatDate(post.createdAt)}</span>
                     </div>
-                  );
-                } else {
-                  return (
-                    <div key={post.id} className="post-card">
-                      <div className="post-header">
-                        <Link to={`/profile/${post.userId}`} className="user-link">
-                          {post.user ? post.user.displayName : 'Unknown User'}
-                        </Link>
-                        <span className="post-date">{formatDate(post.createdAt)}</span>
-                      </div>
-                      <div className="post-content">{post.content}</div>
-                      <div className="post-footer">
-                        <button 
-                          onClick={() => handleLike(post.id)} 
-                          className={`like-button ${post.liked ? 'liked' : ''}`}
-                          disabled={post.liked}
-                        >
-                          {post.likesCount} {post.likesCount === 1 ? 'Like' : 'Likes'}
-                        </button>
-                        <span>{post.commentsCount} {post.commentsCount === 1 ? 'Comment' : 'Comments'}</span>
-                      </div>
+                    <div className="post-content">{post.content}</div>
+                    <div className="post-footer">
+                      <button
+                        onClick={() => handleLike(post.id)}
+                        className={`like-button ${post.liked ? 'liked' : ''}`}
+                        disabled={post.liked}
+                      >
+                        {post.likesCount} {post.likesCount === 1 ? 'Like' : 'Likes'}
+                      </button>
+                      <button
+                        className="comments-toggle-button"
+                        onClick={() => toggleComments(post.id)}
+                      >
+                        {displayCount} {displayCount === 1 ? 'Comment' : 'Comments'}
+                      </button>
                     </div>
-                  );
-                }
+                    {expandedComments.has(post.id) && (
+                      <CommentThread
+                        postId={post.id}
+                        currentUserId={user?.id ?? ''}
+                        onCommentAdded={() => setCommentCounts(prev => ({ ...prev, [post.id]: (prev[post.id] ?? post.commentsCount) + 1 }))}
+                        onCommentDeleted={() => setCommentCounts(prev => ({ ...prev, [post.id]: Math.max(0, (prev[post.id] ?? post.commentsCount) - 1) }))}
+                      />
+                    )}
+                  </div>
+                );
               })
             )}
           </div>

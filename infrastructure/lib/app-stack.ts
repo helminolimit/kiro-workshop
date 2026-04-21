@@ -295,6 +295,42 @@ export class AppStack extends cdk.Stack {
       }
     });
 
+    // Lambda function for creating comments
+    const createCommentFunction = new lambda.Function(this, 'CreateCommentFunction', {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'createComment.handler',
+      code: lambda.Code.fromAsset(getLambdaPackagePath('createComment')),
+      environment: {
+        POSTS_TABLE: this.postsTable.tableName,
+        COMMENTS_TABLE: this.commentsTable.tableName,
+        USERS_TABLE: this.usersTable.tableName
+      }
+    });
+
+    // Lambda function for getting comments
+    const getCommentsFunction = new lambda.Function(this, 'GetCommentsFunction', {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'getComments.handler',
+      code: lambda.Code.fromAsset(getLambdaPackagePath('getComments')),
+      environment: {
+        POSTS_TABLE: this.postsTable.tableName,
+        COMMENTS_TABLE: this.commentsTable.tableName,
+        USERS_TABLE: this.usersTable.tableName
+      }
+    });
+
+    // Lambda function for deleting comments
+    const deleteCommentFunction = new lambda.Function(this, 'DeleteCommentFunction', {
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'deleteComment.handler',
+      code: lambda.Code.fromAsset(getLambdaPackagePath('deleteComment')),
+      environment: {
+        POSTS_TABLE: this.postsTable.tableName,
+        COMMENTS_TABLE: this.commentsTable.tableName,
+        USERS_TABLE: this.usersTable.tableName
+      }
+    });
+
 
 
     // Grant permissions to Lambda functions
@@ -317,6 +353,15 @@ export class AppStack extends cdk.Stack {
     this.postsTable.grantReadData(getPostsFunction);
     this.postsTable.grantReadWriteData(likePostFunction);
     this.likesTable.grantReadWriteData(likePostFunction);
+    this.commentsTable.grantReadWriteData(createCommentFunction);
+    this.postsTable.grantReadWriteData(createCommentFunction);
+    this.usersTable.grantReadData(createCommentFunction);
+    this.commentsTable.grantReadData(getCommentsFunction);
+    this.postsTable.grantReadData(getCommentsFunction);
+    this.usersTable.grantReadData(getCommentsFunction);
+    this.commentsTable.grantReadWriteData(deleteCommentFunction);
+    this.postsTable.grantReadWriteData(deleteCommentFunction);
+    this.usersTable.grantReadData(deleteCommentFunction);
 
     // API Gateway endpoints
     const auth = this.api.root.addResource('auth');
@@ -351,6 +396,13 @@ export class AppStack extends cdk.Stack {
     const postId = posts.addResource('{postId}');
     const likePost = postId.addResource('like');
     likePost.addMethod('POST', new apigateway.LambdaIntegration(likePostFunction));
+
+    const comments = postId.addResource('comments');
+    comments.addMethod('GET', new apigateway.LambdaIntegration(getCommentsFunction));
+    comments.addMethod('POST', new apigateway.LambdaIntegration(createCommentFunction));
+
+    const commentId = comments.addResource('{commentId}');
+    commentId.addMethod('DELETE', new apigateway.LambdaIntegration(deleteCommentFunction));
 
     // S3 bucket for frontend hosting
     this.websiteBucket = new s3.Bucket(this, 'WebsiteBucket', {
