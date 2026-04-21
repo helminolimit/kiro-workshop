@@ -175,7 +175,11 @@ const Feed: React.FC = () => {
             )}
           </div>
           
-          {loading && <div className="loading">Loading posts...</div>}
+          {loading && (
+            <div className="loading">
+              <div className="spinner" role="status" aria-label="Loading posts" />
+            </div>
+          )}
         </div>
       </div>
       
