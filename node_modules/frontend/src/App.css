@@ -260,6 +260,33 @@ button:disabled {
   text-align: center;
 }
 
+/* Password requirements */
+.password-requirements {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 0.8125rem;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+  color: #657786;
+  transition: color 0.15s;
+}
+
+.requirement.met {
+  color: var(--success-color);
+}
+
+.requirement-icon {
+  font-size: 0.75rem;
+  width: 1em;
+  text-align: center;
+}
+
 /* Posts */
 .feed-header {
   margin-bottom: 0.5rem;

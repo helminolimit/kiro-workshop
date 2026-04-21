@@ -106,17 +106,32 @@ exports.handler = async (event) => {
     };
   } catch (error) {
     console.error('Error registering user:', error);
-    
+
+    // Map Cognito error codes to user-friendly messages
+    const cognitoErrorMessages = {
+      UsernameExistsException: 'An account with that username already exists.',
+      InvalidPasswordException: 'Password does not meet the requirements.',
+      InvalidParameterException: 'One or more fields are invalid.',
+      TooManyRequestsException: 'Too many attempts. Please try again later.',
+      NotAuthorizedException: 'Registration is not allowed at this time.',
+    };
+
+    const userMessage =
+      cognitoErrorMessages[error.name] ||
+      error.message ||
+      'An unexpected error occurred. Please try again.';
+
+    const statusCode = error.name === 'UsernameExistsException' ? 409 : 500;
+
     return {
-      statusCode: 500,
+      statusCode,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Credentials': true,
       },
       body: JSON.stringify({
-        message: 'Error registering user',
-        error: error.message || 'Unknown error',
+        message: userMessage,
       }),
     };
   }

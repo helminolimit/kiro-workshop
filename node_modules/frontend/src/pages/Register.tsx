@@ -16,10 +16,12 @@ const Register: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [formError, setFormError] = useState('');
+  const [error, setError] = useState('');
   
-  const { register, loading, error } = useAuth();
+  const { register, loading } = useAuth();
   const navigate = useNavigate();
+
+  const clearError = () => setError('');
 
   const passwordChecks = useMemo(
     () => PASSWORD_RULES.map((rule) => ({ ...rule, met: rule.test(password) })),
@@ -29,20 +31,20 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setFormError('');
+    setError('');
     
     if (!username || !email || !password || !confirmPassword || !displayName) {
-      setFormError('Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
     
     if (!passwordValid) {
-      setFormError('Password does not meet all requirements');
+      setError('Password does not meet all requirements');
       return;
     }
     
     if (password !== confirmPassword) {
-      setFormError('Passwords do not match');
+      setError('Passwords do not match');
       return;
     }
     
@@ -50,27 +52,26 @@ const Register: React.FC = () => {
       await register(username, email, password, displayName);
       navigate('/');
     } catch (err) {
-      // Error is handled by the auth context
+      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
     }
   };
 
   return (
     <div className="register-container">
       <h2>Create an Account</h2>
+      {error && (
+        <div className="error-message" role="alert">
+          {error}
+        </div>
+      )}
       <form onSubmit={handleSubmit}>
-        {(formError || error) && (
-          <div className="error-message">
-            {formError || error}
-          </div>
-        )}
-        
         <div className="form-group">
           <label htmlFor="username">Username</label>
           <input
             type="text"
             id="username"
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => { setUsername(e.target.value); clearError(); }}
             disabled={loading}
             required
           />
@@ -82,7 +83,7 @@ const Register: React.FC = () => {
             type="email"
             id="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); clearError(); }}
             disabled={loading}
             required
           />
@@ -94,7 +95,7 @@ const Register: React.FC = () => {
             type="text"
             id="displayName"
             value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
+            onChange={(e) => { setDisplayName(e.target.value); clearError(); }}
             disabled={loading}
             required
           />
@@ -106,7 +107,7 @@ const Register: React.FC = () => {
             type="password"
             id="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => { setPassword(e.target.value); clearError(); }}
             disabled={loading}
             required
           />
@@ -130,7 +131,7 @@ const Register: React.FC = () => {
             type="password"
             id="confirmPassword"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => { setConfirmPassword(e.target.value); clearError(); }}
             disabled={loading}
             required
           />
