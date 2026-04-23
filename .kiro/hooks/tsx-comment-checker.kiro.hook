@@ -1,0 +1,20 @@
+{
+  "enabled": true,
+  "name": "TSX Comment Checker",
+  "description": "Inspects TSX files for proper commenting when saved and adds comments directly if they don't align with best practices",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.tsx",
+      "frontend/src/components/Post.tsx",
+      "C:\\laragon\\www\\kiro-workshop\\frontend\\src\\types\\post.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the saved TSX file for commenting best practices. Check if components, complex logic, props interfaces, and key functions have appropriate comments. If commenting is insufficient or doesn't follow best practices, add JSDoc comments for components, explain complex logic, document prop types, and clarify non-obvious functionality directly in the file."
+  },
+  "workspaceFolderName": "kiro-workshop",
+  "shortName": "tsx-comment-checker"
+}

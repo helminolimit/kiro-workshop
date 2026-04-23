@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Add Props Interface to New Components",
+  "description": "When a new React component file is created, automatically add TypeScript interface definitions for props with JSDoc comments describing each prop's purpose and type",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "frontend/src/components/*.tsx",
+      "frontend/src/pages/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new React component file was just created. Read the file and if it doesn't already have a props interface, add a TypeScript interface definition for the component's props with JSDoc comments describing each prop's purpose and type. Follow React and TypeScript best practices."
+  },
+  "workspaceFolderName": "kiro-workshop",
+  "shortName": "react-component-props-interface"
+}

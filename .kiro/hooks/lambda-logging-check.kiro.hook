@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Lambda Logging Check",
+  "description": "Ensures Lambda handler files include console.log statements at the start (with event details) and end (with response) for debugging purposes",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "backend/src/functions/**/*.js"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the saved Lambda handler file and ensure it includes console.log statements at the start of the handler function (logging event details) and at the end (logging the response before returning). If these logging statements are missing or incomplete, add them following the project's Lambda handler patterns."
+  },
+  "workspaceFolderName": "kiro-workshop",
+  "shortName": "lambda-logging-check"
+}

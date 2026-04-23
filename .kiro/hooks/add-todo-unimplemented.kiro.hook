@@ -1,0 +1,19 @@
+{
+  "enabled": true,
+  "name": "Add TODO to Unimplemented Functions",
+  "description": "Automatically adds // TODO: Implement this function comments to new functions with empty bodies or just return statements in TypeScript files",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.ts",
+      "*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the saved TypeScript file and find any functions that don't have implementation yet (functions with empty bodies, just a return statement, or placeholder returns like 'return null' or 'return undefined'). For each unimplemented function found, add a comment '// TODO: Implement this function' at the start of the function body if it doesn't already have a TODO comment."
+  },
+  "workspaceFolderName": "kiro-workshop",
+  "shortName": "add-todo-unimplemented"
+}

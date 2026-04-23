@@ -6,3 +6,8 @@ export interface Comment {
   content: string;
   createdAt: string;
 }
+
+// Create this function and save
+function calculateEngagement(post) {
+  return 0;
+}

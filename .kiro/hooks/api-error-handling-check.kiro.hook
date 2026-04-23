@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "API Error Handling Check",
+  "description": "When the API service file is saved, verify that all API calls include proper error handling with try-catch blocks and user-friendly error messages. Add error handling where missing.",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "frontend/src/services/api.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the API service file and check that all API calls include proper error handling with try-catch blocks and user-friendly error messages. If any API calls are missing error handling, add it now. Ensure errors are caught, logged appropriately, and return meaningful messages to users."
+  },
+  "workspaceFolderName": "kiro-workshop",
+  "shortName": "api-error-handling-check"
+}

@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "Generate Page Tests",
+  "description": "When a new page component is created in frontend/src/pages/, automatically generate a corresponding test file with basic rendering tests and accessibility checks using React Testing Library",
+  "version": "1",
+  "when": {
+    "type": "fileCreated",
+    "patterns": [
+      "frontend/src/pages/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A new page component was just created. Generate a corresponding test file (with .test.tsx extension) in the same directory that includes: 1) Basic rendering test to verify the component mounts without errors, 2) Accessibility checks using jest-axe or similar to ensure no a11y violations, 3) Tests for any key interactive elements visible in the component. Use React Testing Library best practices (query by role, accessible names). Match the project's existing test patterns if any exist."
+  },
+  "workspaceFolderName": "kiro-workshop",
+  "shortName": "page-test-generator"
+}
