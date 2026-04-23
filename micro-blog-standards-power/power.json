@@ -1,0 +1,21 @@
+{
+  "name": "micro-blog-standards",
+  "version": "1.0.0",
+  "displayName": "Micro Blog Coding Standards",
+  "description": "Comprehensive coding standards and conventions for the Micro Blogging App project, covering React/TypeScript frontend, Node.js Lambda backend, and AWS CDK infrastructure patterns.",
+  "keywords": [
+    "conventions",
+    "standards",
+    "coding standards",
+    "style guide",
+    "best practices",
+    "micro-blog",
+    "react",
+    "lambda",
+    "cdk",
+    "typescript",
+    "nodejs"
+  ],
+  "author": "Micro Blogging Team",
+  "license": "MIT"
+}

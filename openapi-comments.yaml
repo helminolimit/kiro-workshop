@@ -1,0 +1,386 @@
+openapi: 3.0.3
+info:
+  title: Micro Blogging App - Comments API
+  description: |
+    API documentation for comment endpoints in the Micro Blogging App.
+    
+    This API allows authenticated users to create, retrieve, and delete comments on posts.
+    All endpoints require Bearer token authentication using AWS Cognito JWT tokens.
+  version: 1.0.0
+  contact:
+    name: Micro Blogging App API Support
+
+servers:
+  - url: https://api.example.com/prod
+    description: Production API
+  - url: https://api.example.com/dev
+    description: Development API
+
+tags:
+  - name: Comments
+    description: Operations related to post comments
+
+security:
+  - BearerAuth: []
+
+paths:
+  /posts/{postId}/comments:
+    post:
+      tags:
+        - Comments
+      summary: Create a new comment on a post
+      description: |
+        Creates a new comment on the specified post. The comment content must be between 1 and 280 characters.
+        The authenticated user's ID and username are automatically attached to the comment.
+        Upon successful creation, the post's comment count is incremented.
+      operationId: createComment
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The unique identifier of the post to comment on
+          schema:
+            type: string
+            format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+            examples:
+              validComment:
+                summary: Valid comment
+                value:
+                  content: "Great post! I totally agree with your perspective."
+              maxLengthComment:
+                summary: Maximum length comment (280 characters)
+                value:
+                  content: "This is a comment that is exactly 280 characters long to demonstrate the maximum allowed length for comments in this micro blogging application. Comments are limited to this length to maintain brevity and encourage concise communication, similar to other micro blogging platforms out there."
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCommentResponse'
+              example:
+                comment:
+                  id: "c7d8e9f0-1234-5678-90ab-cdef12345678"
+                  postId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  userId: "u9876543-21fe-dcba-0987-654321fedcba"
+                  username: "johndoe"
+                  content: "Great post! I totally agree with your perspective."
+                  createdAt: "2024-01-15T10:30:45.123Z"
+        '400':
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptyContent:
+                  summary: Empty comment content
+                  value:
+                    message: "Comment content cannot be empty"
+                tooLong:
+                  summary: Content exceeds maximum length
+                  value:
+                    message: "Comment content cannot exceed 280 characters"
+                missingPostId:
+                  summary: Missing post ID in path
+                  value:
+                    message: "Missing post ID"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Post not found"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - BearerAuth: []
+
+    get:
+      tags:
+        - Comments
+      summary: Get all comments for a post
+      description: |
+        Retrieves all comments for the specified post, ordered by creation time (ascending).
+        Returns an empty array if the post has no comments.
+        The post must exist, otherwise a 404 error is returned.
+      operationId: getComments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The unique identifier of the post whose comments to retrieve
+          schema:
+            type: string
+            format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        '200':
+          description: Comments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetCommentsResponse'
+              examples:
+                withComments:
+                  summary: Post with multiple comments
+                  value:
+                    comments:
+                      - id: "c7d8e9f0-1234-5678-90ab-cdef12345678"
+                        postId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                        userId: "u9876543-21fe-dcba-0987-654321fedcba"
+                        username: "johndoe"
+                        content: "Great post! I totally agree with your perspective."
+                        createdAt: "2024-01-15T10:30:45.123Z"
+                      - id: "d8e9f0a1-2345-6789-0abc-def123456789"
+                        postId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                        userId: "u1234567-89ab-cdef-0123-456789abcdef"
+                        username: "janedoe"
+                        content: "Thanks for sharing this insight!"
+                        createdAt: "2024-01-15T11:15:22.456Z"
+                noComments:
+                  summary: Post with no comments
+                  value:
+                    comments: []
+        '400':
+          description: Bad request - Missing post ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Missing post ID"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Post not found"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - BearerAuth: []
+
+  /comments/{commentId}:
+    delete:
+      tags:
+        - Comments
+      summary: Delete a comment
+      description: |
+        Deletes the specified comment. Only the comment author can delete their own comment.
+        Upon successful deletion, the associated post's comment count is decremented.
+        
+        **Authorization**: The authenticated user must be the author of the comment.
+      operationId: deleteComment
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          description: The unique identifier of the comment to delete
+          schema:
+            type: string
+            format: uuid
+          example: "c7d8e9f0-1234-5678-90ab-cdef12345678"
+        - name: postId
+          in: path
+          required: true
+          description: The unique identifier of the post containing the comment (required for route matching)
+          schema:
+            type: string
+            format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteCommentResponse'
+              example:
+                message: "Comment deleted successfully"
+        '400':
+          description: Bad request - Missing required parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Missing post ID or comment ID"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Forbidden - User is not the comment author
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "You are not authorized to delete this comment"
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                message: "Comment not found"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security:
+        - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        AWS Cognito JWT token (IdToken). Include in the Authorization header as: `Bearer <token>`
+        
+        The token is decoded to extract the user's ID and username, which are used for authorization.
+
+  schemas:
+    CreateCommentRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 280
+          description: The text content of the comment
+          example: "Great post! I totally agree with your perspective."
+      additionalProperties: false
+
+    CreateCommentResponse:
+      type: object
+      properties:
+        comment:
+          $ref: '#/components/schemas/Comment'
+
+    GetCommentsResponse:
+      type: object
+      properties:
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+          description: Array of comments for the post, ordered by creation time (ascending)
+
+    DeleteCommentResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Comment deleted successfully"
+
+    Comment:
+      type: object
+      required:
+        - id
+        - postId
+        - userId
+        - username
+        - content
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the comment (UUID v4)
+          example: "c7d8e9f0-1234-5678-90ab-cdef12345678"
+        postId:
+          type: string
+          format: uuid
+          description: ID of the post this comment belongs to
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        userId:
+          type: string
+          format: uuid
+          description: ID of the user who created the comment
+          example: "u9876543-21fe-dcba-0987-654321fedcba"
+        username:
+          type: string
+          description: Username of the comment author
+          example: "johndoe"
+        content:
+          type: string
+          minLength: 1
+          maxLength: 280
+          description: The text content of the comment
+          example: "Great post! I totally agree with your perspective."
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the comment was created
+          example: "2024-01-15T10:30:45.123Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Comment content cannot be empty"
+        error:
+          type: string
+          description: Technical error details (only included in 500 errors)
+          example: "DynamoDB connection timeout"
+
+  responses:
+    UnauthorizedError:
+      description: Authentication failed or missing
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missingToken:
+              summary: Missing authorization token
+              value:
+                message: "Missing authorization token"
+            invalidToken:
+              summary: Invalid or expired token
+              value:
+                message: "Authentication failed"
+                error: "Token has expired"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            message: "Internal server error"
+            error: "DynamoDB connection timeout"
+
+  examples:
+    SampleComment:
+      summary: A typical comment
+      value:
+        id: "c7d8e9f0-1234-5678-90ab-cdef12345678"
+        postId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        userId: "u9876543-21fe-dcba-0987-654321fedcba"
+        username: "johndoe"
+        content: "Great post! I totally agree with your perspective."
+        createdAt: "2024-01-15T10:30:45.123Z"
