@@ -1,0 +1,23 @@
+digraph "Login Flow - Micro Blogging App" {
+	graph [fontcolor="#2D3436" fontname="Sans-Serif" fontsize=15 label="Login Flow - Micro Blogging App" nodesep=0.60 pad=2.0 rankdir=LR ranksep=0.75 splines=ortho]
+	node [fixedsize=true fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13 height=1.4 imagescale=true labelloc=b shape=box style=rounded width=1.4]
+	edge [color="#7B8894"]
+	dcaabdcd3411477da3d7fff06c5371ed [label=User height=1.9 image="C:\Users\helmi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\resources/aws/general\user.png" shape=none]
+	dfa0e7faa51b4e5abdb3db7b6665a5c1 [label="React App
+(Frontend)" height=2.3 image="C:\Users\helmi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\resources/aws/compute\lambda.png" shape=none]
+	"0eed12a3863042609d4302892fdcafed" [label="API Gateway" height=1.9 image="C:\Users\helmi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\resources/aws/mobile\api-gateway.png" shape=none]
+	a9052964e39848c3b5df83d076e80a9e [label="Auth Lambda
+(login.js)" height=2.3 image="C:\Users\helmi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\resources/aws/compute\lambda.png" shape=none]
+	"095b4721b9674bb9aed061f597442440" [label="Cognito
+User Pool" height=2.3 image="C:\Users\helmi\AppData\Local\Python\pythoncore-3.14-64\Lib\site-packages\resources/aws/security\cognito.png" shape=none]
+	dcaabdcd3411477da3d7fff06c5371ed -> dfa0e7faa51b4e5abdb3db7b6665a5c1 [label="1. Enter credentials" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	dfa0e7faa51b4e5abdb3db7b6665a5c1 -> "0eed12a3863042609d4302892fdcafed" [label="2. POST /auth/login" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"0eed12a3863042609d4302892fdcafed" -> a9052964e39848c3b5df83d076e80a9e [label="3. Invoke" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	a9052964e39848c3b5df83d076e80a9e -> "095b4721b9674bb9aed061f597442440" [label="4. Validate credentials" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"095b4721b9674bb9aed061f597442440" -> a9052964e39848c3b5df83d076e80a9e [label="5. Return tokens
+(IdToken, AccessToken)" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	a9052964e39848c3b5df83d076e80a9e -> "0eed12a3863042609d4302892fdcafed" [label="6. Return tokens" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	"0eed12a3863042609d4302892fdcafed" -> dfa0e7faa51b4e5abdb3db7b6665a5c1 [label="7. Return tokens" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+	dfa0e7faa51b4e5abdb3db7b6665a5c1 -> dcaabdcd3411477da3d7fff06c5371ed [label="8. Store tokens
+& redirect to feed" dir=forward fontcolor="#2D3436" fontname="Sans-Serif" fontsize=13]
+}
