@@ -66,19 +66,17 @@ EOF
     echo "Package for $function_name prepared successfully"
 }
 
-# Prepare packages for auth functions
-for func in ./src/functions/auth/*.js; do
-    prepare_package $func
-done
-
-# Prepare packages for user functions
-for func in ./src/functions/users/*.js; do
-    prepare_package $func
-done
-
-# Prepare packages for post functions
-for func in ./src/functions/posts/*.js; do
-    prepare_package $func
+# Dynamically discover and prepare packages for all function directories
+for func_dir in ./src/functions/*/; do
+    # Skip if not a directory
+    [ -d "$func_dir" ] || continue
+    
+    # Process all .js files in this directory
+    for func in $func_dir*.js; do
+        # Skip if no .js files found (glob didn't match)
+        [ -f "$func" ] || continue
+        prepare_package $func
+    done
 done
 
 echo "All Lambda packages prepared successfully in $TEMP_DIR"

@@ -77,19 +77,12 @@ function Prepare-Package {
     Write-Host "Package for $FunctionName prepared successfully"
 }
 
-# Prepare packages for auth functions
-Get-ChildItem -Path "./src/functions/auth/*.js" | ForEach-Object {
-    Prepare-Package -FunctionPath $_.FullName
-}
-
-# Prepare packages for user functions
-Get-ChildItem -Path "./src/functions/users/*.js" | ForEach-Object {
-    Prepare-Package -FunctionPath $_.FullName
-}
-
-# Prepare packages for post functions
-Get-ChildItem -Path "./src/functions/posts/*.js" | ForEach-Object {
-    Prepare-Package -FunctionPath $_.FullName
+# Dynamically discover and prepare packages for all function directories
+Get-ChildItem -Path "./src/functions/*" -Directory | ForEach-Object {
+    $FunctionDir = $_
+    Get-ChildItem -Path "$($FunctionDir.FullName)/*.js" -File | ForEach-Object {
+        Prepare-Package -FunctionPath $_.FullName
+    }
 }
 
 Write-Host "All Lambda packages prepared successfully in $TempDir"

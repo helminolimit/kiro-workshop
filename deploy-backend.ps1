@@ -47,8 +47,8 @@ Write-Host "🏗️ Deploying backend infrastructure..." -ForegroundColor Yellow
 
 # Bootstrap CDK environment (idempotent - safe to run multiple times)
 Write-Host "🔧 Ensuring CDK environment is bootstrapped..." -ForegroundColor Yellow
-cdk bootstrap
+npx cdk bootstrap
 
-cdk deploy $StackName --require-approval never
+npx cdk deploy $StackName --require-approval never
 
 Write-Host "✅ Backend deployment completed successfully!" -ForegroundColor Green
