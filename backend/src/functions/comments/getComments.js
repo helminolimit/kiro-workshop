@@ -1,7 +1,6 @@
 const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
 const {
   DynamoDBDocumentClient,
-  GetCommand,
   QueryCommand,
 } = require('@aws-sdk/lib-dynamodb');
 const { withAuth } = require('../../common/middleware');
@@ -34,30 +33,15 @@ const handler = async (event) => {
       };
     }
 
-    const postsTableName = process.env.POSTS_TABLE;
     const commentsTableName = process.env.COMMENTS_TABLE;
 
-    if (!postsTableName || !commentsTableName) {
+    if (!commentsTableName) {
       throw new Error('Required environment variables are not set');
     }
 
-    // Verify the post exists
-    const getPostCommand = new GetCommand({
-      TableName: postsTableName,
-      Key: { id: postId },
-    });
-
-    const postResult = await ddbDocClient.send(getPostCommand);
-
-    if (!postResult.Item) {
-      return {
-        statusCode: 404,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ message: 'Post not found' }),
-      };
-    }
-
     // Query comments for the post using the postId-index GSI
+    // Note: We don't verify post existence first - if the post doesn't exist,
+    // we'll simply return an empty array, which is the correct behavior
     const queryCommand = new QueryCommand({
       TableName: commentsTableName,
       IndexName: 'postId-index',
@@ -78,7 +62,7 @@ const handler = async (event) => {
       body: JSON.stringify({ comments }),
     };
   } catch (err) {
-    console.error('Error getting comments:', err);
+    console.error('Error getting comments for post:', event.pathParameters?.postId, err);
 
     return {
       statusCode: 500,

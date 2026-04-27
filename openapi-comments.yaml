@@ -176,7 +176,7 @@ paths:
       security:
         - BearerAuth: []
 
-  /comments/{commentId}:
+  /posts/{postId}/comments/{commentId}:
     delete:
       tags:
         - Comments
@@ -188,6 +188,14 @@ paths:
         **Authorization**: The authenticated user must be the author of the comment.
       operationId: deleteComment
       parameters:
+        - name: postId
+          in: path
+          required: true
+          description: The unique identifier of the post containing the comment
+          schema:
+            type: string
+            format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
         - name: commentId
           in: path
           required: true
@@ -196,14 +204,6 @@ paths:
             type: string
             format: uuid
           example: "c7d8e9f0-1234-5678-90ab-cdef12345678"
-        - name: postId
-          in: path
-          required: true
-          description: The unique identifier of the post containing the comment (required for route matching)
-          schema:
-            type: string
-            format: uuid
-          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
       responses:
         '200':
           description: Comment deleted successfully

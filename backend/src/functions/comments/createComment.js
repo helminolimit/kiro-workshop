@@ -24,43 +24,69 @@ const CORS_HEADERS = {
  * @returns {Object} - API Gateway response
  */
 const handler = async (event) => {
+  console.log('Received event:', JSON.stringify(event, null, 2));
+  
   try {
     // Validate request body
     if (!event.body) {
-      return {
+      const response = {
         statusCode: 400,
         headers: CORS_HEADERS,
         body: JSON.stringify({ message: 'Comment content cannot be empty' }),
       };
+      console.log('Returning response:', JSON.stringify(response, null, 2));
+      return response;
     }
 
-    const { content } = JSON.parse(event.body);
+    let content;
+    try {
+      const body = JSON.parse(event.body);
+      content = body.content;
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      const response = {
+        statusCode: 400,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ message: 'Invalid JSON in request body' }),
+      };
+      console.log('Returning response:', JSON.stringify(response, null, 2));
+      return response;
+    }
 
     if (!content || content.trim() === '') {
-      return {
+      const response = {
         statusCode: 400,
         headers: CORS_HEADERS,
         body: JSON.stringify({ message: 'Comment content cannot be empty' }),
       };
+      console.log('Returning response:', JSON.stringify(response, null, 2));
+      return response;
     }
 
     if (content.length > 280) {
-      return {
+      const response = {
         statusCode: 400,
         headers: CORS_HEADERS,
         body: JSON.stringify({ message: 'Comment content cannot exceed 280 characters' }),
       };
+      console.log('Returning response:', JSON.stringify(response, null, 2));
+      return response;
     }
+
+    // Basic sanitization: trim whitespace and remove null bytes
+    const sanitizedContent = content.trim().replace(/\0/g, '');
 
     // Get post ID from path parameter
     const postId = event.pathParameters?.postId;
 
     if (!postId) {
-      return {
+      const response = {
         statusCode: 400,
         headers: CORS_HEADERS,
         body: JSON.stringify({ message: 'Missing post ID' }),
       };
+      console.log('Returning response:', JSON.stringify(response, null, 2));
+      return response;
     }
 
     const postsTableName = process.env.POSTS_TABLE;
@@ -70,23 +96,8 @@ const handler = async (event) => {
       throw new Error('Required environment variables are not set');
     }
 
-    // Verify the post exists
-    const getPostCommand = new GetCommand({
-      TableName: postsTableName,
-      Key: { id: postId },
-    });
-
-    const postResult = await ddbDocClient.send(getPostCommand);
-
-    if (!postResult.Item) {
-      return {
-        statusCode: 404,
-        headers: CORS_HEADERS,
-        body: JSON.stringify({ message: 'Post not found' }),
-      };
-    }
-
-    // Create the comment
+    // Create the comment with conditional check that post exists
+    // This uses a single atomic operation to verify post existence and increment counter
     const commentId = uuidv4();
     const createdAt = new Date().toISOString();
 
@@ -95,38 +106,75 @@ const handler = async (event) => {
       postId,
       userId: event.user.id,
       username: event.user.username,
-      content,
+      content: sanitizedContent,
       createdAt,
     };
 
-    const putCommand = new PutCommand({
-      TableName: commentsTableName,
-      Item: comment,
-    });
+    // First, atomically increment the post's comment count with a condition that the post exists
+    try {
+      const updateCommand = new UpdateCommand({
+        TableName: postsTableName,
+        Key: { id: postId },
+        UpdateExpression: 'ADD commentsCount :one',
+        ConditionExpression: 'attribute_exists(id)',
+        ExpressionAttributeValues: {
+          ':one': 1,
+        },
+      });
 
-    await ddbDocClient.send(putCommand);
+      await ddbDocClient.send(updateCommand);
+    } catch (err) {
+      if (err.name === 'ConditionalCheckFailedException') {
+        console.error('Post not found:', postId);
+        const response = {
+          statusCode: 404,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ message: 'Post not found' }),
+        };
+        console.log('Returning response:', JSON.stringify(response, null, 2));
+        return response;
+      }
+      throw err;
+    }
 
-    // Increment commentsCount on the post
-    const updateCommand = new UpdateCommand({
-      TableName: postsTableName,
-      Key: { id: postId },
-      UpdateExpression: 'ADD commentsCount :one',
-      ExpressionAttributeValues: {
-        ':one': 1,
-      },
-    });
+    // Only create the comment if the post update succeeded
+    try {
+      const putCommand = new PutCommand({
+        TableName: commentsTableName,
+        Item: comment,
+      });
 
-    await ddbDocClient.send(updateCommand);
+      await ddbDocClient.send(putCommand);
+    } catch (err) {
+      // If comment creation fails, we need to decrement the counter we just incremented
+      console.error('Failed to create comment, rolling back counter:', err);
+      try {
+        const rollbackCommand = new UpdateCommand({
+          TableName: postsTableName,
+          Key: { id: postId },
+          UpdateExpression: 'ADD commentsCount :negOne',
+          ExpressionAttributeValues: {
+            ':negOne': -1,
+          },
+        });
+        await ddbDocClient.send(rollbackCommand);
+      } catch (rollbackErr) {
+        console.error('Failed to rollback counter:', rollbackErr);
+      }
+      throw err;
+    }
 
-    return {
+    const response = {
       statusCode: 201,
       headers: CORS_HEADERS,
       body: JSON.stringify({ comment }),
     };
+    console.log('Returning response:', JSON.stringify(response, null, 2));
+    return response;
   } catch (err) {
-    console.error('Error creating comment:', err);
+    console.error('Error creating comment on post:', event.pathParameters?.postId, 'by user:', event.user?.id, err);
 
-    return {
+    const response = {
       statusCode: 500,
       headers: CORS_HEADERS,
       body: JSON.stringify({
@@ -134,6 +182,8 @@ const handler = async (event) => {
         error: err.message,
       }),
     };
+    console.log('Returning response:', JSON.stringify(response, null, 2));
+    return response;
   }
 };
 

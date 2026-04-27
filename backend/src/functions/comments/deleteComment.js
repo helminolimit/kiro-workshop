@@ -60,6 +60,16 @@ const handler = async (event) => {
 
     const comment = commentResult.Item;
 
+    // Verify the comment belongs to the specified post
+    if (comment.postId !== postId) {
+      console.error(`Comment ${commentId} does not belong to post ${postId}`);
+      return {
+        statusCode: 400,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ message: 'Comment does not belong to the specified post' }),
+      };
+    }
+
     // Check that the requesting user is the comment author
     if (comment.userId !== event.user.id) {
       return {
@@ -92,9 +102,9 @@ const handler = async (event) => {
 
       await ddbDocClient.send(updateCommand);
     } catch (err) {
-      if (err instanceof ConditionalCheckFailedException) {
+      if (err.name === 'ConditionalCheckFailedException') {
         // commentsCount is already 0 or post doesn't exist — treat as no-op
-        console.warn('ConditionalCheckFailedException when decrementing commentsCount — ignoring');
+        console.warn(`ConditionalCheckFailedException when decrementing commentsCount for post ${postId} — ignoring`);
       } else {
         throw err;
       }
@@ -106,7 +116,7 @@ const handler = async (event) => {
       body: JSON.stringify({ message: 'Comment deleted successfully' }),
     };
   } catch (err) {
-    console.error('Error deleting comment:', err);
+    console.error('Error deleting comment:', commentId, 'from post:', postId, 'by user:', event.user?.id, err);
 
     return {
       statusCode: 500,
